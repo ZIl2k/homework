@@ -1,0 +1,35 @@
+#!groovy
+import groovy.json.JsonSlurper
+
+def configurationFile = readFileFromWorkspace("build/cicd/configurations.json")
+def jsonSlurper = new JsonSlurper()
+def configurations = jsonSlurper.parseText(configurationFile)
+
+configurations.each {object, variables ->
+    def JOB_NAME = object
+    def PARAMS = variables.options.join()
+ 	def OS = variables.nodes.toArray()[0]
+
+  	pipelineJob(JOB_NAME) {
+        parameters {
+            stringParam('PARAMS', PARAMS, 'Параметры сборки')
+          	choiceParam('OS', OS, 'Операционная система')
+        	choiceParam('CONFIGURATION', ['release', 'debug'], 'Конфигурация. release debug')
+            booleanParam('UPLOAD_SOURCES', false, 'Сохранить исходники в nexus')
+    	}
+ 	    definition {
+            cpsScm {
+                scm {
+                    git {
+                        remote {
+                            url('https://git.sniip-atom.ru/sniip-atom/voyage.git')
+                            credentials('9870a3c5-437c-479b-b872-29ef465b79ca')
+                        }
+                        branch('*/makefile') 
+                    }
+                    scriptPath('build/cicd/Jenkinsfile')
+                }
+            }
+    	}
+	}
+}

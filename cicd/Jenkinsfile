@@ -1,0 +1,110 @@
+def genericSh(cmd) {
+    if (isUnix()) {
+        sh cmd
+    }
+    else {
+        bat cmd
+   }
+}
+
+def genericPy() {
+    if (isUnix()) {
+        return "python3"
+    }
+    else {
+        return "py"
+    }
+}
+
+pipeline{
+    environment {
+        build_opts = "${params.PARAMS} -o ${JOB_NAME} -c ${params.CONFIGURATION} -wi"
+        install_opts = "${params.PARAMS} -o ${JOB_NAME} -a -vh voyage -c ${params.CONFIGURATION} -wg -wb"
+        python = genericPy()
+        desc = """PARAMS:\t${params.PARAMS}
+OS:\t${params.OS}
+CONFIGURATION:\t${params.CONFIGURATION}
+"""
+    }
+    agent { node(params.OS) }
+    stages {
+        stage('Prepare') {
+            steps {
+                script {
+                    checkout([
+                        $class: 'GitSCM', 
+                        branches: [[name: '*/master']],
+                        userRemoteConfigs: [[credentialsId: '9870a3c5-437c-479b-b872-29ef465b79ca', url: 'https://git.sniip-atom.ru/sniip-atom/voyage.git']]
+                    ])
+                    currentBuild.description = desc
+                }
+            }
+        }
+        stage('Build stage') {
+            steps {
+                dir("build/linux") {
+                    catchError(buildResult: 'UNSTABLE', stageResult: 'UNSTABLE') {
+                        genericSh("$python vbuild.py $build_opts")
+                    }
+                }
+            }
+        }
+        stage('Install stage') {
+            steps {
+                catchError(buildResult: 'UNSTABLE', stageResult: 'UNSTABLE') {
+                    genericSh("$python vbuild.py $install_opts")
+                }
+            }
+        }
+        stage('upload voyage bin to repo') {
+            steps {
+                script {
+                    nexusArtifactUploader(
+                        nexusVersion: 'nexus3',
+                        protocol: 'http',
+                        nexusUrl: 'repo.sniip.local',
+                        groupId: params.OBJECT,
+                        version: BUILD_NUMBER,
+                        repository: 'voyage',
+                        credentialsId: 'repo',
+                        artifacts: [
+                            [artifactId: "${params.CONFIGURATION}-${JOB_NAME}-bin".toLowerCase(),
+                            classifier: 'voyage-bin.tar.gz',
+                            file: 'voyage-bin.tar.gz',
+                            ]
+                        ]
+                    )
+                }
+            }
+        }
+        stage('upload voyage src to repo') {
+            when {
+                expression {"${params.UPLOAD_SOURCES}" == 'true'}
+                }
+            steps {
+                script {
+                    nexusArtifactUploader(
+                        nexusVersion: 'nexus3',
+                        protocol: 'http',
+                        nexusUrl: 'repo.sniip.local',
+                        groupId: params.OBJECT,
+                        version: BUILD_NUMBER,
+                        repository: 'voyage',
+                        credentialsId: 'repo',
+                        artifacts: [
+                            [artifactId: "${params.CONFIGURATION}-${JOB_NAME}-src".toLowerCase(),
+                            classifier: 'voyage-src.tar.gz',
+                            file: 'voyage-src.tar.gz',
+                            ]
+                        ]
+                    )
+                }
+            }
+        }
+    }
+    post { 
+        always {
+            deleteDir()
+        }
+    }
+}

@@ -1,0 +1,56 @@
+{
+    "EBO3": [
+        {
+            "options": "-t svrk -t ivs",
+            "nodes": ["win10-vs19"]
+        }
+    ],
+    "EBO4": [
+        {
+            "options": "-t svrk -t ivs",
+            "nodes": ["win10-vs19"]
+        }
+    ],
+    "EMO1": [
+        {
+            "options": "-t svrk -t ivs",
+            "nodes": ["win10-vs19"]
+        }
+    ],
+    "EMO2": [
+        {
+            "options": "-t svrk -t ivs",
+            "nodes": ["win10-vs19"]
+        }
+    ],
+    "ARM2": [
+        {
+            "options": "-t svrk -t ivs",
+            "nodes": ["win10-vs19"]
+        }
+    ],
+    "KOL1": [
+        {
+            "options": "-t svrk -t ivs",
+            "nodes": ["win10-vs19"]
+        }
+    ],
+    "KOL2": [
+        {
+            "options": "-t svrk -t ivs",
+            "nodes": ["win10-vs19"]
+        }
+    ],
+    "NOV4": [
+        {
+            "options": "-t svrk -t ivs",
+            "nodes": ["win10-vs19"]
+        }
+    ],
+    "NOV6": [
+        {
+            "options": "-t svrk -t ivs -t tigr -t sipo",
+            "nodes": ["win10-vs19"]
+        }
+    ]
+}
